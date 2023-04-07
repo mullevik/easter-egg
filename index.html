@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@1.*/css/pico.min.css">
+    <title>Easter-egg hunt</title>
+    <style>
+        /* Pink Light scheme (Default) */
+        /* Can be forced with data-theme="light" */
+        [data-theme="light"],
+        :root:not([data-theme="dark"]) {
+            --primary: #d81b60;
+            --primary-hover: #c2185b;
+            --primary-focus: rgba(216, 27, 96, 0.125);
+            --primary-inverse: #FFF;
+        }
+
+        /* Pink Dark scheme (Auto) */
+        /* Automatically enabled if user has Dark mode enabled */
+        @media only screen and (prefers-color-scheme: dark) {
+            :root:not([data-theme]) {
+                --primary: #d81b60;
+                --primary-hover: #e91e63;
+                --primary-focus: rgba(216, 27, 96, 0.25);
+                --primary-inverse: #FFF;
+            }
+        }
+
+        /* Pink Dark scheme (Forced) */
+        /* Enabled if forced with data-theme="dark" */
+        [data-theme="dark"] {
+            --primary: #d81b60;
+            --primary-hover: #e91e63;
+            --primary-focus: rgba(216, 27, 96, 0.25);
+            --primary-inverse: #FFF;
+        }
+
+        /* Pink (Common styles) */
+        :root {
+            --form-element-active-border-color: var(--primary);
+            --form-element-focus-color: var(--primary-focus);
+            --switch-color: var(--primary-inverse);
+            --switch-checked-background-color: var(--primary);
+        }
+
+        .error {
+            color: #b40000;
+        }
+    </style>
+</head>
+
+<body>
+    <main class="container" style="text-align: center; margin: auto;">
+        <h1>Can you find your easter egg?</h1>
+        <section>
+            <img src="./egg.png">
+
+        </section>
+        <section>
+            <h2>Clue #1</h2>
+            <div class="clue" id="clue-1">
+                <progress></progress>
+            </div>
+        </section>
+        <section>
+            <h2>Clue #2</h2>
+            <div class="clue" id="clue-2">
+                <progress></progress>
+            </div>
+        </section>
+        <section>
+            <h2>Clue #3</h2>
+            <div class="clue" id="clue-3">
+                <progress></progress>
+            </div>
+        </section>
+        <section>
+            <h2>Clue #4</h2>
+            <div class="clue" id="clue-4">
+                <progress></progress>
+            </div>
+        </section>
+        <section>
+            <h2>Clue #5</h2>
+            <div class="clue" id="clue-5">
+                <progress></progress>
+            </div>
+        </section>
+        <section>
+            <h2>Clue #6</h2>
+            <div class="clue" id="clue-6">
+                <progress></progress>
+            </div>
+        </section>
+    </main>
+</body>
+
+<script>
+    const URL = "https://script.google.com/macros/s/AKfycbxEgzytrHZ1hDnMRCsh3iyycYDyG41V2AgQR-HNke7KfE3fymgefqgHbk7jMsAD4dYh/exec";
+
+    const clues = [
+        {"element": document.getElementById("clue-1"), "date": null},
+        {"element": document.getElementById("clue-2"), "date": null},
+        {"element": document.getElementById("clue-3"), "date": null},
+        {"element": document.getElementById("clue-4"), "date": null},
+        {"element": document.getElementById("clue-5"), "date": null},
+        {"element": document.getElementById("clue-6"), "date": null},
+    ]
+
+    function displayError(element, message) {
+        element.innerHTML = `<p class="error">${message}</p>`;
+    }
+
+    function displayLink(element, link) {
+        element.innerHTML = `<p>Is available <a href="${link}" target="_blank">here</a>.</p>`;
+    }
+
+    function getRemainingMiliseconds(date) {
+        const currentDate = new Date();
+        return date.getTime() - currentDate.getTime();
+    }
+
+    function loadClue(clueNumber, element) {
+        fetch(`${URL}?clue=${clueNumber}`)
+        .then(response => response.json())
+        .then(data => {
+            console.log(data);
+            // Handle the JSON data here
+            if ("date" in data) {
+                // get open date from API
+                const openDate = new Date(data["date"]);
+                // set open date state for this clue
+                clues[clueNumber - 1]["date"] = openDate;
+                // set interval for next API call with a small delay
+                setInterval(() => {
+                    loadClue(clueNumber, element);
+                }, getRemainingMiliseconds(openDate) + 1000);
+            } else if ("link" in data) {
+                clues[clueNumber - 1]["date"] = null;
+                displayLink(element, data["link"]);
+            } else {
+                throw "Bad response";
+            }
+        })
+        .catch(error => {
+            // Handle any errors that occur during the fetch request
+            displayError(element, `Unable to fetch clue #${clueNumber}. Something broke :(`);
+        });
+    }
+
+
+    function displayTimer(element, secondsRemaining) {
+
+        if (secondsRemaining <= 0) {
+            element.innerHTML = "<p aria-busy='true'>Auto refreshing... (Refresh the page manually if nothing happends)</p>";
+            return;
+        }
+
+        const hours = Math.floor(secondsRemaining / (60 * 60));
+        const minutes = Math.floor((secondsRemaining / 60) % 60);
+        const seconds = secondsRemaining % 60;
+
+        if (hours > 0) {
+            element.innerHTML = `<p>Unlocks in ${hours} hours ${minutes} minutes and ${seconds} seconds.</p>`;
+        } else if (minutes > 0) {
+            element.innerHTML = `<p>Unlocks in ${minutes} minutes and ${seconds} seconds.</p>`;
+        } else {
+            element.innerHTML = `<p>Unlocks in ${seconds} seconds.</p>`;
+        }
+    }
+
+    function updateTimers() {
+        for (let clue of clues) {
+            const date = clue["date"];
+            if (date === null) continue;
+
+            const currentDate = new Date();
+            const timeDiff = date.getTime() - currentDate.getTime();
+            const secondsDiff = Math.round(timeDiff / 500);
+            if (secondsDiff) {
+                displayTimer(clue["element"], secondsDiff);
+            }
+        }
+    }
+
+    window.onload = function () {
+        console.log("Page loaded!");
+
+        for (const [index, clue] of clues.entries()) {
+            loadClue(index + 1, clue["element"]);
+        }
+
+        setInterval(updateTimers, 1000);
+    }
+</script>
+
+</html>
