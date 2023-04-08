@@ -58,42 +58,42 @@
             <img src="./egg.png">
 
         </section>
-        <section>
+        <article>
             <h2>Clue #1</h2>
             <div class="clue" id="clue-1">
                 <progress></progress>
             </div>
-        </section>
-        <section>
+        </article>
+        <article>
             <h2>Clue #2</h2>
             <div class="clue" id="clue-2">
                 <progress></progress>
             </div>
-        </section>
-        <section>
+        </article>
+        <article>
             <h2>Clue #3</h2>
             <div class="clue" id="clue-3">
                 <progress></progress>
             </div>
-        </section>
-        <section>
+        </article>
+        <article>
             <h2>Clue #4</h2>
             <div class="clue" id="clue-4">
                 <progress></progress>
             </div>
-        </section>
-        <section>
+        </article>
+        <article>
             <h2>Clue #5</h2>
             <div class="clue" id="clue-5">
                 <progress></progress>
             </div>
-        </section>
-        <section>
+        </article>
+        <article>
             <h2>Clue #6</h2>
             <div class="clue" id="clue-6">
                 <progress></progress>
             </div>
-        </section>
+        </article>
     </main>
 </body>
 
@@ -136,7 +136,7 @@
                 // set interval for next API call with a small delay
                 setInterval(() => {
                     loadClue(clueNumber, element);
-                }, getRemainingMiliseconds(openDate) + 1000);
+                }, getRemainingMiliseconds(openDate) + 500);
             } else if ("link" in data) {
                 clues[clueNumber - 1]["date"] = null;
                 displayLink(element, data["link"]);
@@ -158,7 +158,7 @@
             return;
         }
 
-        const hours = Math.floor(secondsRemaining / (60 * 60));
+        const hours = Math.floor(secondsRemaining / 60 / 60);
         const minutes = Math.floor((secondsRemaining / 60) % 60);
         const seconds = secondsRemaining % 60;
 
@@ -178,7 +178,7 @@
 
             const currentDate = new Date();
             const timeDiff = date.getTime() - currentDate.getTime();
-            const secondsDiff = Math.round(timeDiff / 500);
+            const secondsDiff = Math.round(timeDiff / 1000);
             if (secondsDiff) {
                 displayTimer(clue["element"], secondsDiff);
             }
